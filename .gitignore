@@ -1,15 +1,18 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
-# Arquivo full
+# Full file
 .DS_Store
 
-# Arquivo full
+# Full file
 .tmp
 measurements1M.txt
 measurements10M.txt
 measurements100M.txt
 measurements.txt
+measurements.csv
+measurements.parquet
+measurements_brotli.parquet
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -186,4 +189,3 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 # Generated using ignr.py - github.com/Antrikshy/ignr.py
-

@@ -1,30 +1,36 @@
 import dask
 import dask.dataframe as dd
 
-def create_dask_df():
-    dask.config.set({'dataframe.query-planning': True})
-    # Configurando o Dask DataFrame para ler o arquivo CSV
-    # Como o arquivo não tem cabeçalho, especificamos os nomes das colunas manualmente
-    df = dd.read_csv("data/measurements.txt", sep=";", header=None, names=["station", "measure"])
-    
-    # Agrupando por 'station' e calculando o máximo, mínimo e média de 'measure'
-    # O Dask realiza operações de forma lazy, então esta parte apenas define o cálculo
-    grouped_df = df.groupby("station")['measure'].agg(['max', 'min', 'mean']).reset_index()
 
-    # O Dask não suporta a ordenação direta de DataFrames agrupados/resultantes de forma eficiente
-    # Mas você pode computar o resultado e então ordená-lo se o dataset resultante não for muito grande
-    # ou se for essencial para a próxima etapa do processamento
-    # A ordenação será realizada após a chamada de .compute(), se necessário
+def create_dask_df():
+    dask.config.set({"dataframe.query-planning": True})
+    # Configuring Dask DataFrame to read the CSV file
+    # Since the file doesn't have a header, we specify column names manually
+    df = dd.read_csv(
+        "data/measurements.txt", sep=";", header=None, names=["station", "measure"]
+    )
+
+    # Grouping by 'station' and calculating the maximum, minimum, and mean of 'measure'
+    # Dask performs operations in a lazy form, so this part only defines the calculation
+    grouped_df = (
+        df.groupby("station")["measure"].agg(["max", "min", "mean"]).reset_index()
+    )
+
+    # Dask does not support direct sorting of grouped/derived DataFrames efficiently
+    # But you can compute the result and then sort it if the resulting dataset is not too large
+    # or if it is essential for the next processing step
+    # Sorting will be performed after the .compute() call, if necessary
 
     return grouped_df
+
 
 if __name__ == "__main__":
     import time
 
     start_time = time.time()
     df = create_dask_df()
-    
-    # O cálculo real e a ordenação são feitos aqui
+
+    # The actual computation and sorting are done here
     result_df = df.compute().sort_values("station")
     took = time.time() - start_time
 

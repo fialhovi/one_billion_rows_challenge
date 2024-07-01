@@ -1,14 +1,18 @@
-# Um Bilhão de Linhas: Desafio de Processamento de Dados com Python
+# One Billion Rows Challenge with Python
 
-## Introdução
+![cover_img](./pic/one_billion_rows.png 'One Billion Rows Challenge')
 
-O objetivo deste projeto é demonstrar como processar eficientemente um arquivo de dados massivo contendo 1 bilhão de linhas (~14GB), especificamente para calcular estatísticas (Incluindo agregação e ordenação que são operações pesadas) utilizando Python. 
+## Introduction
 
-Este desafio foi inspirado no [The One Billion Row Challenge](https://github.com/gunnarmorling/1brc), originalmente proposto para Java.
+The objective of this project is to demonstrate how to efficiently process a massive data file containing 1 billion rows (~16GB), specifically to calculate statistics (including aggregation and sorting, which are heavy operations) using Python.
 
-O arquivo de dados consiste em medições de temperatura de várias estações meteorológicas. Cada registro segue o formato `<string: nome da estação>;<double: medição>`, com a temperatura sendo apresentada com precisão de uma casa decimal.
+This challenge was inspired by the [The One Billion Row Challenge](https://github.com/gunnarmorling/1brc), originally proposed for Java, and adapted for Python by [Luciano Galvão](https://www.linkedin.com/in/lucianovasconcelosf/).
 
-Aqui estão dez linhas de exemplo do arquivo:
+This project also addressed the challenges of converting a CSV file to Parquet (GZIP) with a size larger than the available RAM. As a result, it was possible to achieve a compression of the file from 16GB to 3GB, optimizing storage and file reading time.
+
+The data file consists of temperature measurements from various weather stations. Each record follows the format <string: station name>;<double: measurement>, with the temperature presented to one decimal place.
+
+Here are ten example lines from the file:
 
 ```
 Hamburg;12.0
@@ -23,133 +27,84 @@ Conakry;31.2
 Istanbul;23.0
 ```
 
-O desafio é desenvolver um programa Python capaz de ler esse arquivo e calcular a temperatura mínima, média (arredondada para uma casa decimal) e máxima para cada estação, exibindo os resultados em uma tabela ordenada por nome da estação.
+The challenge is to develop a Python program capable of reading this file and calculating the minimum, average (rounded to one decimal place), and maximum temperature for each station, displaying the results in a table sorted by station name. For example:
 
-| station      | min_temperature | mean_temperature | max_temperature |
-|--------------|-----------------|------------------|-----------------|
-| Abha         | -31.1           | 18.0             | 66.5            |
-| Abidjan      | -25.9           | 26.0             | 74.6            |
-| Abéché       | -19.8           | 29.4             | 79.9            |
-| Accra        | -24.8           | 26.4             | 76.3            |
-| Addis Ababa  | -31.8           | 16.0             | 63.9            |
-| Adelaide     | -31.8           | 17.3             | 71.5            |
-| Aden         | -19.6           | 29.1             | 78.3            |
-| Ahvaz        | -24.0           | 25.4             | 72.6            |
-| Albuquerque  | -35.0           | 14.0             | 61.9            |
-| Alexandra    | -40.1           | 11.0             | 67.9            |
-| ...          | ...             | ...              | ...             |
-| Yangon       | -23.6           | 27.5             | 77.3            |
-| Yaoundé      | -26.2           | 23.8             | 73.4            |
-| Yellowknife  | -53.4           | -4.3             | 46.7            |
-| Yerevan      | -38.6           | 12.4             | 62.8            |
-| Yinchuan     | -45.2           | 9.0              | 56.9            |
-| Zagreb       | -39.2           | 10.7             | 58.1            |
-| Zanzibar City| -26.5           | 26.0             | 75.2            |
-| Zürich       | -42.0           | 9.3              | 63.6            |
-| Ürümqi       | -42.1           | 7.4              | 56.7            |
-| İzmir        | -34.4           | 17.9             | 67.9            |
+| station       | min_temperature | mean_temperature | max_temperature |
+| ------------- | --------------- | ---------------- | --------------- |
+| Abha          | -31.1           | 18.0             | 66.5            |
+| Abidjan       | -25.9           | 26.0             | 74.6            |
+| Abéché        | -19.8           | 29.4             | 79.9            |
+| Accra         | -24.8           | 26.4             | 76.3            |
+| Addis Ababa   | -31.8           | 16.0             | 63.9            |
+| Adelaide      | -31.8           | 17.3             | 71.5            |
+| Aden          | -19.6           | 29.1             | 78.3            |
+| Ahvaz         | -24.0           | 25.4             | 72.6            |
+| Albuquerque   | -35.0           | 14.0             | 61.9            |
+| Alexandra     | -40.1           | 11.0             | 67.9            |
+| ...           | ...             | ...              | ...             |
+| Yangon        | -23.6           | 27.5             | 77.3            |
+| Yaoundé       | -26.2           | 23.8             | 73.4            |
+| Yellowknife   | -53.4           | -4.3             | 46.7            |
+| Yerevan       | -38.6           | 12.4             | 62.8            |
+| Yinchuan      | -45.2           | 9.0              | 56.9            |
+| Zagreb        | -39.2           | 10.7             | 58.1            |
+| Zanzibar City | -26.5           | 26.0             | 75.2            |
+| Zürich        | -42.0           | 9.3              | 63.6            |
+| Ürümqi        | -42.1           | 7.4              | 56.7            |
+| İzmir         | -34.4           | 17.9             | 67.9            |
 
-## Dependências
+## Dependencies
 
-Para executar os scripts deste projeto, você precisará das seguintes bibliotecas:
+To run the scripts of this project, you will need the following libraries:
 
-* Polars: `0.20.3`
-* DuckDB: `0.10.0`
-* Dask[complete]: `^2024.2.0`
+- Polars: `0.20.3`
+- DuckDB: `0.10.0`
+- Dask[complete]: `^2024.2.0`
 
-## Resultados
+## Results
 
-Os testes foram realizados em um laptop equipado com um processador M1 da Apple e 8GB de RAM. As implementações utilizaram abordagens puramente Python, Pandas, Dask, Polars e DuckDB. Os resultados de tempo de execução para processar o arquivo de 1 bilhão de linhas são apresentados abaixo:
+The tests were conducted on a laptop equipped with an Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz 1.99 GHz processor and 16GB of RAM. The implementations used pure Python, Pandas, Dask, Polars, and DuckDB approaches. The execution time results for processing the 1 billion rows file are presented below:
 
-| Implementação | Tempo |
-| --- | --- |
-| Bash + awk | 25 minutos |
-| Python | 20 minutos |
-| Python + Pandas | 263 sec |
-| Python + Dask | 155.62 sec  |
-| Python + Polars | 33.86 sec |
-| Python + Duckdb | 14.98 sec |
+| Implementation  | Time       |
+| --------------- | ---------- |
+| Python          | 57 min     |
+| Python + Pandas | 496.31 sec |
+| Python + Dask   | 342.87 sec |
+| Python + Polars | 258.57 sec |
+| Python + DuckDB | 237.98 sec |
 
-Obrigado por [Koen Vossen](https://github.com/koenvo) pela implementação em Polars e [Arthur Julião](https://github.com/ArthurJ) pela implementação em Python e Bash 
+### DuckDB: CSV vs. Parquet
 
-## Conclusão
+| Implementation  | File Format          | Time       |
+| --------------- | -------------------- | ---------- |
+| Python + DuckDB | CSV - 16GB           | 237.98 sec |
+| Python + DuckDB | Parquet (Gzip) - 3GB | 32.90 sec  |
 
-Este desafio destacou claramente a eficácia de diversas bibliotecas Python na manipulação de grandes volumes de dados. Métodos tradicionais como Bash (25 minutos), Python puro (20 minutos) e até mesmo o Pandas (5 minutos) demandaram uma série de táticas para implementar o processamento em "lotes", enquanto bibliotecas como Dask, Polars e DuckDB provaram ser excepcionalmente eficazes, requerendo menos linhas de código devido à sua capacidade inerente de distribuir os dados em "lotes em streaming" de maneira mais eficiente. O DuckDB se sobressaiu, alcançando o menor tempo de execução graças à sua estratégia de execução e processamento de dados.
+## Conclusion
 
-Esses resultados enfatizam a importância de selecionar a ferramenta adequada para análise de dados em larga escala, demonstrando que Python, com as bibliotecas certas, é uma escolha poderosa para enfrentar desafios de big data.
+This challenge clearly highlighted the effectiveness of various Python libraries in handling large volumes of data. Traditional methods such as pure Python (57 minutes), and even Pandas (8 minutes), required a series of tactics to implement batch processing, while libraries like Dask, Polars, and DuckDB proved to be exceptionally effective, requiring fewer lines of code due to their inherent ability to distribute data in more efficient streaming batches. DuckDB stood out, achieving the shortest execution time thanks to its execution strategy and data processing capabilities.
 
-Duckdb vence tambem com 1 milhao de linhas, realmente é o melhor
+It was also possible to see how the Parquet file format (Gzip compression) is more efficient in storage compared to CSV files, in addition to other advantages, such as higher processing efficiency, incorporating the data schema, and easy portability. Overall, Parquet format demonstrated very high performance in analytical queries and large-scale data processing operations.
 
-## Como Executar
+These results emphasize the importance of selecting the appropriate tool for large-scale data analysis, demonstrating that Python, with the right libraries, is a powerful choice for tackling big data challenges.
 
-Para executar este projeto e reproduzir os resultados:
+## How to Run
 
-1. Clone esse repositório
-2. Definir a versao do Python usando o `pyenv local 3.12.1`
-2. `poetry env use 3.12.1`, `poetry install --no-root` e `poetry lock --no-update`
-3. Execute o comando `python src/create_measurements.py` para gerar o arquivo de teste
-4. Tenha paciência e vá fazer um café, vai demorar uns 10 minutos para gerar o arquivo
-5. Certifique-se de instalar as versões especificadas das bibliotecas Dask, Polars e DuckDB
-6. Execute os scripts `python src/using_python.py`, `python src/using_pandas.py`, `python src/using_dask.py`, `python src/using_polars.py` e `python src/using_duckdb.py` através de um terminal ou ambiente de desenvolvimento que suporte Python.
+To run this project and reproduce the results:
 
-Este projeto destaca a versatilidade do ecossistema Python para tarefas de processamento de dados, oferecendo valiosas lições sobre escolha de ferramentas para análises em grande escala.
+1. Clone this repository
+2. Set the Python version using `pyenv local 3.12.1` (make sure you have pyenv installed)
+3. Run `poetry env use 3.12.1`, `poetry install --no-root`, and `poetry lock --no-update` (make sure you have poetry installed)
+4. Set the Python interpreter to the Poetry .venv
+5. Run the command `python src/create_measurements.py` to generate the test file (CSV)
+6. Be patient and go make a coffee, it will take about 15 minutes to generate the file
+7. Run the command `python src/convert_to_parquet.py` to generate the Parquet file from the CSV, it will take about 20 minutes
+8. Run the scripts `python src/using_python.py`, `python src/using_pandas.py`, `python src/using_dask.py`, `python src/using_polars.py`, `python src/using_duckdb.py`, and `python src/using_duckdb_parquet.py` through the terminal.
 
-## Bonus
+## References
 
-Para rodar o script Bash descrito, você precisa seguir alguns passos simples. Primeiro, assegure-se de que você tenha um ambiente Unix-like, como Linux ou macOS, que suporta scripts Bash nativamente. Além disso, verifique se as ferramentas utilizadas no script (`wc`, `head`, `pv`, `awk`, e `sort`) estão instaladas em seu sistema. A maioria dessas ferramentas vem pré-instalada em sistemas Unix-like, mas `pv` (Pipe Viewer) pode precisar ser instalado manualmente.
+TUTORIAL Apache Parquet em Python, Let's Data. Here: https://www.youtube.com/watch?v=BztuEQ9ojtc.
 
-### Instalando o Pipe Viewer (pv)
+A Deep Dive into Parquet: The Data Format Engineers Need to Know, Airbyte Blog. Here: https://airbyte.com/data-engineering-resources/parquet-data-format.
 
-Se você não tem o `pv` instalado, pode facilmente instalá-lo usando o gerenciador de pacotes do seu sistema. Por exemplo:
-
-* No Ubuntu/Debian:
-    
-    ```bash
-    sudo apt-get update
-    sudo apt-get install pv
-    ```
-    
-* No macOS (usando [Homebrew](https://brew.sh/)):
-    
-    ```bash
-    brew install pv
-    ```
-    
-### Preparando o Script
-
-1. Dê permissão de execução para o arquivo script. Abra um terminal e execute:
-    
-    ```bash
-    chmod +x process_measurements.sh
-    ```
-
-2. Rode o script. Abra um terminal e execute:
-   
-   ```bash
-   ./src/using_bash_and_awk.sh 1000
-   ```
-
-Neste exemplo, apenas as primeiras 1000 linhas serão processadas.
-
-Ao executar o script, você verá a barra de progresso (se pv estiver instalado corretamente) e, eventualmente, a saída esperada no terminal ou em um arquivo de saída, se você decidir modificar o script para direcionar a saída.
-
-## Próximos passos
-
-Esse projeto faz parte da *Jornada de Dados*
-Nossa missão é fornecer o melhor ensino em engenharia de dados
-
-Se você quer:
-
-- Aprender sobre Duckdb e engenharia de dados
-- Construir uma base sólida em Python e SQL
-- Criar ou melhorar seu portfólio de dados
-- Criar ou aumentar o seu networking na área
-- Mudar ou dar o próximo passo em sua carreira
-
-A Jornada de Dados é o seu lugar
-
-[![Imagem](https://github.com/lvgalvao/data-engineering-roadmap/raw/main/pics/jornada.png)](https://www.jornadadedados2024.com.br/workshops)
-
-Para entrar na lista de espera clique no botao
-
-[![Imagem](https://raw.githubusercontent.com/lvgalvao/data-engineering-roadmap/main/pics/lista_de_espera.png)](https://forms.gle/hJMtRDP3MPBUGvwS7?orbt_src=orbt-vst-1RWyYmpICDu9gPknLgaD)
+Parquet Documentation, Compression section. Here: https://parquet.apache.org/docs/file-format/data-pages/compression/.

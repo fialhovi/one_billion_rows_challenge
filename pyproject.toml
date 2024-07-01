@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "one-billion-row-challenge-python"
+name = "one-billion-rows-challenge-python"
 version = "0.1.0"
 description = ""
-authors = ["Luciano Filho <lvgalvaofilho@gmail.com>"]
+authors = ["Vinicius Fialho <vinicius.fialho96@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -13,7 +13,21 @@ modin = {extras = ["dask"], version = "^0.27.0"}
 dask = {extras = ["complete"], version = "^2024.2.0"}
 dask-expr = "^0.4.2"
 tqdm = "^4.66.2"
+pyarrow = "^16.1.0"
+black = "^24.4.2"
+isort = "^5.13.2"
+flake8 = "^7.1.0"
+taskipy = "^1.13.0"
+pre-commit = "^3.7.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.taskipy.tasks]
+format = """
+black . && isort .
+"""

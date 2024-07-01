@@ -1,49 +1,62 @@
 import pandas as pd
-from multiprocessing import Pool, cpu_count
-from tqdm import tqdm  # importa o tqdm para barra de progresso
 
-CONCURRENCY = cpu_count()
 
-total_linhas = 1_000_000_000  # Total de linhas conhecido
-chunksize = 100_000_000  # Define o tamanho do chunk
-filename = "data/measurements.txt"  # Certifique-se de que este é o caminho correto para o arquivo
+def create_pandas_df(filepath, chunksize=100_000_000):
+    chunk_iter = pd.read_csv(
+        filepath,
+        sep=";",
+        header=None,
+        names=["station", "measure"],
+        chunksize=chunksize,
+    )
 
-def process_chunk(chunk):
-    # Agrega os dados dentro do chunk usando Pandas
-    aggregated = chunk.groupby('station')['measure'].agg(['min', 'max', 'mean']).reset_index()
-    return aggregated
+    # Dictionary to accumulate results
+    agg_dict = {}
 
-def create_df_with_pandas(filename, total_linhas, chunksize=chunksize):
-    total_chunks = total_linhas // chunksize + (1 if total_linhas % chunksize else 0)
-    results = []
+    for chunk in chunk_iter:
+        chunk["station"] = chunk["station"].astype(str)
+        chunk["measure"] = chunk["measure"].astype(float)
 
-    with pd.read_csv(filename, sep=';', header=None, names=['station', 'measure'], chunksize=chunksize) as reader:
-        # Envolvendo o iterador com tqdm para visualizar o progresso
-        with Pool(CONCURRENCY) as pool:
-            for chunk in tqdm(reader, total=total_chunks, desc="Processando"):
-                # Processa cada chunk em paralelo
-                result = pool.apply_async(process_chunk, (chunk,))
-                results.append(result)
+        grouped_chunk = chunk.groupby("station").agg(
+            max_measure=("measure", "max"),
+            min_measure=("measure", "min"),
+            mean_measure=("measure", "mean"),
+            count=("measure", "count"),  # To help in calculating the overall mean
+        )
 
-            results = [result.get() for result in results]
+        for station, row in grouped_chunk.iterrows():
+            if station not in agg_dict:
+                agg_dict[station] = row
+            else:
+                agg_dict[station]["max_measure"] = max(
+                    agg_dict[station]["max_measure"], row["max_measure"]
+                )
+                agg_dict[station]["min_measure"] = min(
+                    agg_dict[station]["min_measure"], row["min_measure"]
+                )
+                agg_dict[station]["mean_measure"] = (
+                    agg_dict[station]["mean_measure"] * agg_dict[station]["count"]
+                    + row["mean_measure"] * row["count"]
+                ) / (agg_dict[station]["count"] + row["count"])
+                agg_dict[station]["count"] += row["count"]
 
-    final_df = pd.concat(results, ignore_index=True)
+    # Converting the dictionary to a DataFrame
+    result_df = (
+        pd.DataFrame.from_dict(agg_dict, orient="index")
+        .reset_index()
+        .rename(columns={"index": "station"})
+    )
+    result_df.drop(columns="count", inplace=True)
+    sorted_df = result_df.sort_values(by="station").reset_index(drop=True)
 
-    final_aggregated_df = final_df.groupby('station').agg({
-        'min': 'min',
-        'max': 'max',
-        'mean': 'mean'
-    }).reset_index().sort_values('station')
+    return sorted_df
 
-    return final_aggregated_df
 
 if __name__ == "__main__":
     import time
 
-    print("Iniciando o processamento do arquivo.")
     start_time = time.time()
-    df = create_df_with_pandas(filename, total_linhas, chunksize)
+    df = create_pandas_df("data/measurements.txt", chunksize=100_000_000)
     took = time.time() - start_time
-
-    print(df.head())
-    print(f"Processing took: {took:.2f} sec")
+    print(df)
+    print(f"Pandas Took: {took:.2f} sec")
